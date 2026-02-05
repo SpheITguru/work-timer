@@ -1,0 +1,455 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Work Timer</title>
+  <style>
+    :root{
+      --bg:#0f172a; --card:#020617; --text:#e5e7eb; --muted:#94a3b8;
+      --accent:#38bdf8; --border:#1e293b;
+    }
+    *{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Ubuntu,sans-serif}
+    body{
+      min-height:100vh; padding:1rem;
+      background:radial-gradient(circle at top,#1e293b,var(--bg));
+      color:var(--text); display:flex; align-items:center; justify-content:center;
+    }
+    .wrap{width:100%; max-width:980px; display:grid; gap:1rem}
+    .top{
+      background:linear-gradient(180deg,#020617,#020617cc);
+      border:1px solid rgba(148,163,184,.12);
+      border-radius:16px; padding:1.6rem 1.5rem;
+      box-shadow:0 20px 50px rgba(0,0,0,.5);
+      text-align:center;
+    }
+    .badge{
+      display:inline-block; padding:.35rem .75rem; border-radius:999px;
+      background:rgba(56,189,248,.15); color:var(--accent);
+      font-size:.85rem; margin-bottom:.9rem;
+    }
+    .time{font-size:3rem; letter-spacing:-.03em; margin:.3rem 0}
+    .date{color:var(--muted); font-size:1.05rem}
+    .grid{display:grid; gap:1rem; grid-template-columns:1fr; }
+    @media (min-width: 860px){ .grid{grid-template-columns:1fr 1fr;} }
+
+    .card{
+      background:linear-gradient(180deg,#020617,#020617cc);
+      border:1px solid rgba(148,163,184,.12);
+      border-radius:16px; padding:1.25rem 1.25rem;
+      box-shadow:0 14px 35px rgba(0,0,0,.35);
+    }
+    .card h2{font-size:1.2rem; margin-bottom:.9rem; letter-spacing:-.01em}
+    .hint{color:var(--muted); font-size:.95rem; margin-top:.2rem; line-height:1.5}
+
+    .row{display:flex; gap:.75rem; flex-wrap:wrap; align-items:center}
+    label{font-size:.85rem; color:var(--muted); display:block; margin-bottom:.35rem}
+    input, select{
+      width:100%; padding:.75rem .85rem; border-radius:10px;
+      border:1px solid var(--border); background:#020617; color:var(--text);
+      font-size:.95rem;
+    }
+    input:focus, select:focus{
+      outline:none; border-color:var(--accent);
+      box-shadow:0 0 0 1px rgba(56,189,248,.4);
+    }
+    .col{flex:1; min-width:170px}
+    .col.small{min-width:120px; flex:0 0 140px}
+
+    button{
+      cursor:pointer; padding:.75rem 1.15rem; border-radius:10px;
+      font-weight:600; border:none; background:var(--accent); color:#020617;
+      transition:transform .15s ease, box-shadow .15s ease;
+      box-shadow:0 10px 25px rgba(56,189,248,.25);
+    }
+    button:hover{transform:translateY(-2px); box-shadow:0 15px 35px rgba(56,189,248,.35)}
+    button.secondary{
+      background:transparent; color:var(--text);
+      border:1px solid #334155; box-shadow:none;
+    }
+
+    .timerBox{
+      margin-top:.75rem;
+      padding:1rem; border-radius:12px;
+      background:rgba(56,189,248,.08);
+      border:1px solid rgba(56,189,248,.25);
+      text-align:center;
+    }
+    .timerDisplay{
+      font-size:2.2rem; color:var(--accent); font-weight:700;
+      letter-spacing:-.02em; margin:.1rem 0 .6rem;
+    }
+    .pillRow{display:flex; gap:.5rem; justify-content:center; flex-wrap:wrap}
+    .pill{
+      border:1px solid rgba(148,163,184,.22);
+      background:transparent; color:var(--text);
+      padding:.45rem .7rem; border-radius:999px; font-weight:600;
+      box-shadow:none; transform:none;
+    }
+    .pill:hover{transform:none; box-shadow:none; border-color:rgba(56,189,248,.5)}
+
+    .list{margin-top:1rem; display:grid; gap:.6rem}
+    .item{
+      display:grid; grid-template-columns:1fr auto; gap:.75rem;
+      align-items:center;
+      padding:.85rem .9rem; border-radius:12px;
+      border:1px solid rgba(148,163,184,.14);
+      background:rgba(2,6,23,.6);
+    }
+    .meta{display:flex; gap:.5rem; flex-wrap:wrap; margin-top:.25rem}
+    .tag{
+      display:inline-block; font-size:.8rem; padding:.2rem .55rem; border-radius:999px;
+      border:1px solid rgba(148,163,184,.18); color:var(--muted);
+    }
+    .tag.p1{border-color:rgba(248,113,113,.35); color:#fecaca}
+    .tag.p2{border-color:rgba(251,191,36,.35); color:#fde68a}
+    .tag.p3{border-color:rgba(34,197,94,.35); color:#bbf7d0}
+    .itemTitle{font-weight:700}
+    .btnX{
+      padding:.55rem .7rem; border-radius:10px;
+      background:transparent; color:var(--text);
+      border:1px solid rgba(148,163,184,.22); box-shadow:none;
+    }
+    .btnX:hover{transform:none; border-color:rgba(248,113,113,.45)}
+    .footerLine{
+      margin-top:1rem; padding-top:1rem;
+      border-top:1px solid rgba(148,163,184,.12);
+      display:flex; gap:.75rem; flex-wrap:wrap; justify-content:space-between; align-items:center;
+      color:var(--muted); font-size:.9rem;
+    }
+    .k{color:var(--text); font-weight:700}
+    .smallNote{color:var(--muted); font-size:.85rem; margin-top:.75rem}
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <!-- TIME / DATE -->
+    <div class="top">
+      <div class="badge">🕒 Work Time</div>
+      <div class="time" id="nowTime">--:--:--</div>
+      <div class="date" id="nowDate">Loading date…</div>
+      <div class="smallNote">Tip: keep this tab open while you work.</div>
+    </div>
+
+    <div class="grid">
+      <!-- COUNTDOWN -->
+      <div class="card">
+        <h2>Countdown</h2>
+        <div class="row">
+          <div class="col">
+            <label for="minutes">Minutes</label>
+            <input id="minutes" type="number" min="0" step="1" placeholder="e.g. 25" />
+          </div>
+          <div class="col small">
+            <label for="seconds">Seconds</label>
+            <input id="seconds" type="number" min="0" max="59" step="1" placeholder="0" />
+          </div>
+        </div>
+
+        <div class="timerBox">
+          <div class="timerDisplay" id="timerDisplay">00:00</div>
+          <div class="pillRow" aria-label="quick presets">
+            <button class="pill" type="button" data-preset="5">5m</button>
+            <button class="pill" type="button" data-preset="15">15m</button>
+            <button class="pill" type="button" data-preset="25">25m</button>
+            <button class="pill" type="button" data-preset="45">45m</button>
+          </div>
+        </div>
+
+        <div class="row" style="justify-content:center; margin-top:1rem;">
+          <button id="startBtn" type="button">Start</button>
+          <button id="pauseBtn" type="button" class="secondary">Pause</button>
+          <button id="resetBtn" type="button" class="secondary">Reset</button>
+        </div>
+
+        <p class="hint" id="timerHint">
+          Set a duration, then Start. Works great for focus sprints.
+        </p>
+      </div>
+
+      <!-- TODO -->
+      <div class="card">
+        <h2>To-do (with priorities & estimates)</h2>
+
+        <div class="row">
+          <div class="col">
+            <label for="taskName">Task name</label>
+            <input id="taskName" type="text" placeholder="e.g. Finish fleet report" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col">
+            <label for="priority">Priority</label>
+            <select id="priority">
+              <option value="1">P1 — High</option>
+              <option value="2" selected>P2 — Medium</option>
+              <option value="3">P3 — Low</option>
+            </select>
+          </div>
+          <div class="col">
+            <label for="estimate">Estimate (minutes)</label>
+            <input id="estimate" type="number" min="1" step="1" placeholder="e.g. 60" />
+          </div>
+          <div class="col small" style="align-self:flex-end;">
+            <button id="addTaskBtn" type="button" style="width:100%;">Add</button>
+          </div>
+        </div>
+
+        <div class="list" id="taskList" aria-live="polite"></div>
+
+        <div class="footerLine">
+          <div>Total tasks: <span class="k" id="taskCount">0</span></div>
+          <div>Total estimate: <span class="k" id="totalMinutes">0</span> min</div>
+        </div>
+
+        <p class="hint">Tasks are saved in your browser (localStorage) on this device.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ---------- TIME / DATE ----------
+    const nowTimeEl = document.getElementById("nowTime");
+    const nowDateEl = document.getElementById("nowDate");
+
+    function tickClock() {
+      const now = new Date();
+      nowTimeEl.textContent = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+      nowDateEl.textContent = now.toLocaleDateString([], { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+    }
+    tickClock();
+    setInterval(tickClock, 1000);
+
+    // ---------- COUNTDOWN ----------
+    const minutesInput = document.getElementById("minutes");
+    const secondsInput = document.getElementById("seconds");
+    const timerDisplay = document.getElementById("timerDisplay");
+    const timerHint = document.getElementById("timerHint");
+
+    const startBtn = document.getElementById("startBtn");
+    const pauseBtn = document.getElementById("pauseBtn");
+    const resetBtn = document.getElementById("resetBtn");
+
+    let remainingMs = 0;
+    let timerInterval = null;
+    let endAt = null;
+
+    function formatMMSS(totalMs) {
+      const totalSec = Math.max(0, Math.floor(totalMs / 1000));
+      const m = Math.floor(totalSec / 60);
+      const s = totalSec % 60;
+      return String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
+    }
+
+    function setDisplayFromInputs() {
+      const m = parseInt(minutesInput.value || "0", 10);
+      const s = parseInt(secondsInput.value || "0", 10);
+      const ms = ((m * 60) + s) * 1000;
+      timerDisplay.textContent = formatMMSS(ms);
+    }
+
+    function stopTimer() {
+      if (timerInterval) clearInterval(timerInterval);
+      timerInterval = null;
+      endAt = null;
+    }
+
+    function updateCountdown() {
+      if (!endAt) return;
+      remainingMs = endAt - Date.now();
+      timerDisplay.textContent = formatMMSS(remainingMs);
+
+      if (remainingMs <= 0) {
+        stopTimer();
+        timerDisplay.textContent = "00:00";
+        timerHint.textContent = "✅ Time’s up. Nice work.";
+        try { navigator.vibrate?.(250); } catch (_) {}
+      }
+    }
+
+    // Live preview when editing inputs (only if not running)
+    minutesInput.addEventListener("input", () => { if (!timerInterval) setDisplayFromInputs(); });
+    secondsInput.addEventListener("input", () => { if (!timerInterval) setDisplayFromInputs(); });
+
+    // Presets
+    document.querySelectorAll("[data-preset]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const m = parseInt(btn.getAttribute("data-preset"), 10);
+        minutesInput.value = String(m);
+        secondsInput.value = "0";
+        stopTimer();
+        remainingMs = m * 60 * 1000;
+        timerDisplay.textContent = formatMMSS(remainingMs);
+        timerHint.textContent = "Preset loaded. Press Start.";
+      });
+    });
+
+    startBtn.addEventListener("click", () => {
+      // If already running, do nothing
+      if (timerInterval) return;
+
+      // If we have remainingMs (paused), resume. Otherwise read inputs.
+      if (!remainingMs || remainingMs <= 0) {
+        const m = parseInt(minutesInput.value || "0", 10);
+        const s = parseInt(secondsInput.value || "0", 10);
+        remainingMs = ((m * 60) + s) * 1000;
+      }
+
+      if (!remainingMs || remainingMs <= 0) {
+        timerHint.textContent = "Set a duration first (minutes/seconds).";
+        return;
+      }
+
+      endAt = Date.now() + remainingMs;
+      timerHint.textContent = "Running… stay focused.";
+      updateCountdown();
+      timerInterval = setInterval(updateCountdown, 200);
+    });
+
+    pauseBtn.addEventListener("click", () => {
+      if (!timerInterval) return;
+      updateCountdown();
+      stopTimer();
+      timerHint.textContent = "Paused. Press Start to continue.";
+      // remainingMs already updated in updateCountdown()
+    });
+
+    resetBtn.addEventListener("click", () => {
+      stopTimer();
+      remainingMs = 0;
+      minutesInput.value = "";
+      secondsInput.value = "";
+      timerDisplay.textContent = "00:00";
+      timerHint.textContent = "Set a duration, then Start. Works great for focus sprints.";
+    });
+
+    // Initialize display
+    setDisplayFromInputs();
+
+    // ---------- TODO LIST ----------
+    const taskName = document.getElementById("taskName");
+    const priority = document.getElementById("priority");
+    const estimate = document.getElementById("estimate");
+    const addTaskBtn = document.getElementById("addTaskBtn");
+    const taskList = document.getElementById("taskList");
+    const taskCount = document.getElementById("taskCount");
+    const totalMinutes = document.getElementById("totalMinutes");
+
+    const STORAGE_KEY = "work_timer_tasks_v1";
+
+    function loadTasks() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function saveTasks(tasks) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+    }
+
+    function priorityLabel(p) {
+      if (p === 1) return "P1 — High";
+      if (p === 2) return "P2 — Medium";
+      return "P3 — Low";
+    }
+
+    function renderTasks() {
+      const tasks = loadTasks();
+
+      // Sort by priority then most recent
+      tasks.sort((a,b) => (a.priority - b.priority) || (b.createdAt - a.createdAt));
+
+      taskList.innerHTML = "";
+      let total = 0;
+
+      for (const t of tasks) {
+        total += t.estimateMin;
+
+        const item = document.createElement("div");
+        item.className = "item";
+
+        const left = document.createElement("div");
+        const title = document.createElement("div");
+        title.className = "itemTitle";
+        title.textContent = t.name;
+
+        const meta = document.createElement("div");
+        meta.className = "meta";
+
+        const pTag = document.createElement("span");
+        pTag.className = "tag " + (t.priority === 1 ? "p1" : t.priority === 2 ? "p2" : "p3");
+        pTag.textContent = priorityLabel(t.priority);
+
+        const eTag = document.createElement("span");
+        eTag.className = "tag";
+        eTag.textContent = `Estimate: ${t.estimateMin} min`;
+
+        meta.appendChild(pTag);
+        meta.appendChild(eTag);
+
+        left.appendChild(title);
+        left.appendChild(meta);
+
+        const del = document.createElement("button");
+        del.className = "btnX";
+        del.type = "button";
+        del.textContent = "Remove";
+        del.addEventListener("click", () => {
+          const next = loadTasks().filter(x => x.id !== t.id);
+          saveTasks(next);
+          renderTasks();
+        });
+
+        item.appendChild(left);
+        item.appendChild(del);
+        taskList.appendChild(item);
+      }
+
+      taskCount.textContent = String(tasks.length);
+      totalMinutes.textContent = String(total);
+
+      if (tasks.length === 0) {
+        const empty = document.createElement("div");
+        empty.className = "hint";
+        empty.textContent = "No tasks yet. Add one above.";
+        taskList.appendChild(empty);
+      }
+    }
+
+    function addTask() {
+      const name = taskName.value.trim();
+      const p = parseInt(priority.value, 10);
+      const est = parseInt(estimate.value || "0", 10);
+
+      if (!name) return;
+      if (!est || est <= 0) return;
+
+      const tasks = loadTasks();
+      tasks.push({
+        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2),
+        name,
+        priority: p,
+        estimateMin: est,
+        createdAt: Date.now()
+      });
+      saveTasks(tasks);
+
+      taskName.value = "";
+      estimate.value = "";
+      priority.value = "2";
+      renderTasks();
+    }
+
+    addTaskBtn.addEventListener("click", addTask);
+    taskName.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); addTask(); } });
+    estimate.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); addTask(); } });
+
+    renderTasks();
+  </script>
+</body>
+</html>
