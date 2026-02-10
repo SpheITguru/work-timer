@@ -1,4 +1,4 @@
-## A simple webapp for tracting your work
+## A simple webapp for tracking your work
 ### Use this app if you want to be productive
 #### Simple Todo list, clock and date display, and timer in actions
 
